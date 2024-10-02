@@ -1,34 +1,42 @@
-import React, { useState, useEffect } from 'react'
-import axios from '../../Utils/Axios'
-import { motion } from 'framer-motion'
-import { StarIcon, ClockIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
-import Loader from './Loader'
-import Slider from 'react-slick'
-import "slick-carousel/slick/slick.css"
-import "slick-carousel/slick/slick-theme.css"
+import React, { useState, useEffect } from "react";
+import axios from "../../Utils/Axios";
+import { motion } from "framer-motion";
+import {
+  StarIcon,
+  ClockIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/solid";
+import Loader from "./Loader";
+import Slider from "react-slick";
+import DropDown from "./DropDown";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const HorizontalCards = () => {
-  const [trendingItems, setTrendingItems] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [trendingItems, setTrendingItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [mediaType, setMediaType] = useState("all");
 
   useEffect(() => {
     const fetchTrendingItems = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const response = await axios.get('/trending/all/week')
-        setTrendingItems(response.data.results.slice(0, 10)) // Get top 10 trending items
+        const response = await axios.get(`/trending/${mediaType}/week`);
+        setTrendingItems(response.data.results.slice(0, 10));
       } catch (error) {
-        console.error('Error fetching trending items:', error)
+        console.error("Error fetching trending items:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchTrendingItems()
-  }, [])
+    fetchTrendingItems();
+  }, [mediaType]);
 
   const CustomPrevArrow = (props) => {
-    const { onClick } = props
+    const { onClick } = props;
     return (
       <button
         onClick={onClick}
@@ -36,11 +44,11 @@ const HorizontalCards = () => {
       >
         <ChevronLeftIcon className="h-6 w-6 text-white" />
       </button>
-    )
-  }
+    );
+  };
 
   const CustomNextArrow = (props) => {
-    const { onClick } = props
+    const { onClick } = props;
     return (
       <button
         onClick={onClick}
@@ -48,8 +56,8 @@ const HorizontalCards = () => {
       >
         <ChevronRightIcon className="h-6 w-6 text-white" />
       </button>
-    )
-  }
+    );
+  };
 
   const settings = {
     dots: true,
@@ -64,30 +72,62 @@ const HorizontalCards = () => {
         breakpoint: 1024,
         settings: {
           slidesToShow: 3,
-        }
+        },
       },
       {
         breakpoint: 600,
         settings: {
           slidesToShow: 2,
-        }
+        },
       },
       {
         breakpoint: 480,
         settings: {
           slidesToShow: 1,
-        }
-      }
-    ]
-  }
+        },
+      },
+    ],
+  };
+
+  const truncateDescription = (text, maxWords) => {
+    const words = text.split(" ");
+    if (words.length > maxWords) {
+      return words.slice(0, maxWords).join(" ");
+    }
+    return text;
+  };
+
+  const toggleDescription = (id) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleMediaTypeChange = (event) => {
+    setMediaType(event.target.value);
+  };
+
+  const mediaTypeOptions = [
+    { value: "all", label: "All" },
+    { value: "movie", label: "Movies" },
+    { value: "tv", label: "TV Shows" },
+  ];
 
   if (isLoading) {
-    return <Loader />
+    return <Loader />;
   }
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Trending This Week</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-white">Trending This Week</h2>
+        <DropDown
+          value={mediaType}
+          onChange={handleMediaTypeChange}
+          options={mediaTypeOptions}
+        />
+      </div>
       <Slider {...settings}>
         {trendingItems.map((item) => (
           <motion.div
@@ -107,11 +147,29 @@ const HorizontalCards = () => {
                   {item.title || item.name}
                 </h3>
                 <p className="text-gray-400 text-sm mt-1">
-                  {item.media_type.charAt(0).toUpperCase() + item.media_type.slice(1)}
+                  {item.media_type.charAt(0).toUpperCase() +
+                    item.media_type.slice(1)}
                 </p>
+                <div className="mt-2">
+                  <p className="text-gray-300 text-sm">
+                    {expandedDescriptions[item.id]
+                      ? item.overview
+                      : truncateDescription(item.overview, 20)}
+                    {item.overview.split(" ").length > 20 && (
+                      <button
+                        onClick={() => toggleDescription(item.id)}
+                        className="text-yellow-400 ml-1 hover:underline focus:outline-none"
+                      >
+                        {expandedDescriptions[item.id] ? "Less" : "More..."}
+                      </button>
+                    )}
+                  </p>
+                </div>
                 <div className="flex items-center mt-2">
                   <StarIcon className="h-5 w-5 text-yellow-400 mr-1" />
-                  <span className="text-white">{item.vote_average.toFixed(1)}</span>
+                  <span className="text-white">
+                    {item.vote_average.toFixed(1)}
+                  </span>
                   <ClockIcon className="h-5 w-5 text-gray-400 ml-4 mr-1" />
                   <span className="text-white">
                     {item.release_date || item.first_air_date}
@@ -123,7 +181,7 @@ const HorizontalCards = () => {
         ))}
       </Slider>
     </div>
-  )
-}
+  );
+};
 
-export default HorizontalCards
+export default HorizontalCards;
