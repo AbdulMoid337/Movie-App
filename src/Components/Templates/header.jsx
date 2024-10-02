@@ -40,9 +40,9 @@ const Header = () => {
     return text.substr(0, text.lastIndexOf(' ', maxLength)) + '...';
   };
 
-  if (isLoading) {
-    return <Loader />
-  }
+  // if (isLoading) {
+  //   return 
+  // }
 
   return (
     <div 
