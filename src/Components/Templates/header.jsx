@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from '../../Utils/Axios'
 import { PlayIcon, FilmIcon, TvIcon, CalendarIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
 
-const Header = () => {
+const header = () => {
   const [backgroundImage, setBackgroundImage] = useState('')
   const [title, setTitle] = useState('')
   const [overview, setOverview] = useState('')
@@ -99,4 +99,4 @@ const Header = () => {
   )
 }
 
-export default Header
+export default header
