@@ -40,10 +40,6 @@ const Header = () => {
     return text.substr(0, text.lastIndexOf(' ', maxLength)) + '...';
   };
 
-  // if (isLoading) {
-  //   return 
-  // }
-
   return (
     <div 
       className="bg-cover bg-center h-[50vh] md:h-[70vh] relative overflow-hidden"

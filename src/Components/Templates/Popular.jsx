@@ -8,42 +8,41 @@ import InfiniteScroll from 'react-infinite-scroll-component'
 import DropDown from './DropDown'
 import Topnav from './Topnav'
 
-const Trending = () => {
+const Popular = () => {
   const navigate = useNavigate()
-  const [trendingItems, setTrendingItems] = useState([])
+  const [popularItems, setPopularItems] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [expandedDescriptions, setExpandedDescriptions] = useState({})
-  const [mediaType, setMediaType] = useState('all')
-  const [timeWindow, setTimeWindow] = useState('week')
+  const [mediaType, setMediaType] = useState('movie')
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
-  const fetchTrendingItems = useCallback(async (resetItems = false) => {
+  const fetchPopularItems = useCallback(async (resetItems = false) => {
     setIsLoading(true)
     try {
-      const response = await axios.get(`/trending/${mediaType}/${timeWindow}?page=${resetItems ? 1 : page}`)
+      const response = await axios.get(`/${mediaType}/popular?page=${resetItems ? 1 : page}`)
       const newItems = response.data.results
-      setTrendingItems(prevItems => resetItems ? newItems : [...prevItems, ...newItems])
+      setPopularItems(prevItems => resetItems ? newItems : [...prevItems, ...newItems])
       setHasMore(response.data.page < response.data.total_pages)
       setPage(prevPage => resetItems ? 2 : prevPage + 1)
     } catch (error) {
-      console.error('Error fetching trending items:', error)
+      console.error('Error fetching popular items:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [mediaType, timeWindow, page])
+  }, [mediaType, page])
 
   useEffect(() => {
-    fetchTrendingItems(true)
-  }, [mediaType, timeWindow])
+    fetchPopularItems(true)
+  }, [mediaType])
 
   useEffect(() => {
-    document.title = `Trending ${mediaType === 'all' ? 'Movies & TV' : mediaType === 'movie' ? 'Movies' : 'TV Shows'} | MovieApp`
+    document.title = `Popular ${mediaType === 'movie' ? 'Movies' : 'TV Shows'} | MovieApp`
   }, [mediaType])
 
   const loadMoreItems = () => {
     if (!isLoading) {
-      fetchTrendingItems()
+      fetchPopularItems()
     }
   }
 
@@ -52,9 +51,8 @@ const Trending = () => {
     setPage(1)
   }
 
-  const handleTimeWindowChange = (event) => {
-    setTimeWindow(event.target.value)
-    setPage(1)
+  const handleBackToHome = () => {
+    navigate('/')
   }
 
   const truncateDescription = (text, maxWords) => {
@@ -73,19 +71,9 @@ const Trending = () => {
   }
 
   const mediaTypeOptions = [
-    { value: 'all', label: 'All' },
     { value: 'movie', label: 'Movies' },
     { value: 'tv', label: 'TV Shows' },
   ]
-
-  const timeWindowOptions = [
-    { value: 'day', label: 'Today' },
-    { value: 'week', label: 'This Week' },
-  ]
-
-  const handleBackToHome = () => {
-    navigate('/')
-  }
 
   return (
     <div className="bg-gray-900 min-h-screen">
@@ -98,21 +86,15 @@ const Trending = () => {
                 className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded flex items-center text-sm"
               >
                 <HomeIcon className="h-5 w-5 mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-                <span className="sm:hidden">Home</span>
+                <span>Home</span>
               </button>
-              <h2 className="text-2xl font-bold text-white">Trending</h2>
+              <h2 className="text-2xl font-bold text-white">Popular</h2>
             </div>
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <div className="flex items-center space-x-4">
               <DropDown
                 value={mediaType}
                 onChange={handleMediaTypeChange}
                 options={mediaTypeOptions}
-              />
-              <DropDown
-                value={timeWindow}
-                onChange={handleTimeWindowChange}
-                options={timeWindowOptions}
               />
               <Topnav />
             </div>
@@ -121,7 +103,7 @@ const Trending = () => {
       </div>
       <div className="pt-24 sm:pt-28 px-4 sm:px-6 lg:px-8">
         <InfiniteScroll
-          dataLength={trendingItems.length}
+          dataLength={popularItems.length}
           next={loadMoreItems}
           hasMore={hasMore}
           loader={<div className="text-center py-4">Loading more...</div>}
@@ -132,7 +114,7 @@ const Trending = () => {
           }
         >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-            {trendingItems.map((item) => (
+            {popularItems.map((item) => (
               <motion.div
                 key={item.id}
                 className="bg-gray-800 rounded-lg shadow-lg overflow-hidden"
@@ -149,13 +131,11 @@ const Trending = () => {
                     {item.title || item.name}
                   </h3>
                   <p className="text-gray-400 text-xs mt-1">
-                    {item.media_type.charAt(0).toUpperCase() + item.media_type.slice(1)}
+                    {mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}
                   </p>
                   <div className="mt-2">
                     <p className="text-gray-300 text-xs sm:text-sm">
-                      {expandedDescriptions[item.id] 
-                        ? item.overview 
-                        : truncateDescription(item.overview, 15)}
+                      {truncateDescription(item.overview, 15)}
                       {item.overview.split(' ').length > 15 && (
                         <button 
                           onClick={() => toggleDescription(item.id)}
@@ -185,4 +165,4 @@ const Trending = () => {
   )
 }
 
-export default Trending
+export default Popular

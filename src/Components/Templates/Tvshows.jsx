@@ -2,59 +2,81 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from '../../Utils/Axios'
 import { motion } from 'framer-motion'
-import { StarIcon, ClockIcon, HomeIcon } from '@heroicons/react/24/solid'
+import { StarIcon, HomeIcon, CalendarIcon, FilmIcon } from '@heroicons/react/24/solid'
 import GlobalLoader from './GlobalLoader'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import DropDown from './DropDown'
 import Topnav from './Topnav'
 
-const Trending = () => {
+const Tvshows = () => {
   const navigate = useNavigate()
-  const [trendingItems, setTrendingItems] = useState([])
+  const [tvShows, setTvShows] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [expandedDescriptions, setExpandedDescriptions] = useState({})
-  const [mediaType, setMediaType] = useState('all')
-  const [timeWindow, setTimeWindow] = useState('week')
+  const [category, setCategory] = useState('popular')
+  const [genre, setGenre] = useState('')
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [genres, setGenres] = useState([])
 
-  const fetchTrendingItems = useCallback(async (resetItems = false) => {
+  const fetchTvShows = useCallback(async (resetItems = false) => {
     setIsLoading(true)
     try {
-      const response = await axios.get(`/trending/${mediaType}/${timeWindow}?page=${resetItems ? 1 : page}`)
-      const newItems = response.data.results
-      setTrendingItems(prevItems => resetItems ? newItems : [...prevItems, ...newItems])
+      let endpoint = `/tv/${category}`
+      let params = { page: resetItems ? 1 : page }
+      if (category === 'discover' && genre) {
+        endpoint = '/discover/tv'
+        params.with_genres = genre
+      }
+      const response = await axios.get(endpoint, { params })
+      const newShows = response.data.results
+      setTvShows(prevShows => resetItems ? newShows : [...prevShows, ...newShows])
       setHasMore(response.data.page < response.data.total_pages)
       setPage(prevPage => resetItems ? 2 : prevPage + 1)
     } catch (error) {
-      console.error('Error fetching trending items:', error)
+      console.error('Error fetching TV shows:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [mediaType, timeWindow, page])
+  }, [category, genre, page])
 
-  useEffect(() => {
-    fetchTrendingItems(true)
-  }, [mediaType, timeWindow])
-
-  useEffect(() => {
-    document.title = `Trending ${mediaType === 'all' ? 'Movies & TV' : mediaType === 'movie' ? 'Movies' : 'TV Shows'} | MovieApp`
-  }, [mediaType])
-
-  const loadMoreItems = () => {
-    if (!isLoading) {
-      fetchTrendingItems()
+  const fetchGenres = async () => {
+    try {
+      const response = await axios.get('/genre/tv/list')
+      setGenres(response.data.genres)
+    } catch (error) {
+      console.error('Error fetching genres:', error)
     }
   }
 
-  const handleMediaTypeChange = (event) => {
-    setMediaType(event.target.value)
+  useEffect(() => {
+    fetchTvShows(true)
+    fetchGenres()
+  }, [category, genre])
+
+  useEffect(() => {
+    document.title = `TV Shows | ${category.charAt(0).toUpperCase() + category.slice(1)} | MovieApp`
+  }, [category])
+
+  const loadMoreItems = () => {
+    if (!isLoading) {
+      fetchTvShows()
+    }
+  }
+
+  const handleCategoryChange = (event) => {
+    setCategory(event.target.value)
+    setPage(1)
+    setGenre('')
+  }
+
+  const handleGenreChange = (event) => {
+    setGenre(event.target.value)
     setPage(1)
   }
 
-  const handleTimeWindowChange = (event) => {
-    setTimeWindow(event.target.value)
-    setPage(1)
+  const handleBackToHome = () => {
+    navigate('/')
   }
 
   const truncateDescription = (text, maxWords) => {
@@ -72,20 +94,18 @@ const Trending = () => {
     }))
   }
 
-  const mediaTypeOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'movie', label: 'Movies' },
-    { value: 'tv', label: 'TV Shows' },
+  const categoryOptions = [
+    { value: 'popular', label: 'Popular' },
+    { value: 'top_rated', label: 'Top Rated' },
+    { value: 'on_the_air', label: 'On The Air' },
+    { value: 'airing_today', label: 'Airing Today' },
+    { value: 'discover', label: 'Discover by Genre' },
   ]
 
-  const timeWindowOptions = [
-    { value: 'day', label: 'Today' },
-    { value: 'week', label: 'This Week' },
-  ]
-
-  const handleBackToHome = () => {
-    navigate('/')
-  }
+  const genreOptions = genres.map(genre => ({
+    value: genre.id.toString(),
+    label: genre.name
+  }))
 
   return (
     <div className="bg-gray-900 min-h-screen">
@@ -101,19 +121,21 @@ const Trending = () => {
                 <span className="hidden sm:inline">Back to Home</span>
                 <span className="sm:hidden">Home</span>
               </button>
-              <h2 className="text-2xl font-bold text-white">Trending</h2>
+              <h2 className="text-2xl font-bold text-white">TV Shows</h2>
             </div>
             <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <DropDown
-                value={mediaType}
-                onChange={handleMediaTypeChange}
-                options={mediaTypeOptions}
+                value={category}
+                onChange={handleCategoryChange}
+                options={categoryOptions}
               />
-              <DropDown
-                value={timeWindow}
-                onChange={handleTimeWindowChange}
-                options={timeWindowOptions}
-              />
+              {category === 'discover' && (
+                <DropDown
+                  value={genre}
+                  onChange={handleGenreChange}
+                  options={genreOptions}
+                />
+              )}
               <Topnav />
             </div>
           </div>
@@ -121,58 +143,57 @@ const Trending = () => {
       </div>
       <div className="pt-24 sm:pt-28 px-4 sm:px-6 lg:px-8">
         <InfiniteScroll
-          dataLength={trendingItems.length}
+          dataLength={tvShows.length}
           next={loadMoreItems}
           hasMore={hasMore}
           loader={<div className="text-center py-4">Loading more...</div>}
           endMessage={
             <p className="text-center text-gray-400 mt-4">
-              You've seen it all!
+              You've seen all the TV shows!
             </p>
           }
         >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-            {trendingItems.map((item) => (
+            {tvShows.map((show) => (
               <motion.div
-                key={item.id}
+                key={show.id}
                 className="bg-gray-800 rounded-lg shadow-lg overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <img
-                  src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                  alt={item.title || item.name}
+                  src={`https://image.tmdb.org/t/p/w500${show.poster_path}`}
+                  alt={show.name}
                   className="w-full h-48 sm:h-64 object-cover"
                 />
                 <div className="p-4">
                   <h3 className="text-sm sm:text-base font-semibold text-white truncate">
-                    {item.title || item.name}
+                    {show.name}
                   </h3>
-                  <p className="text-gray-400 text-xs mt-1">
-                    {item.media_type.charAt(0).toUpperCase() + item.media_type.slice(1)}
-                  </p>
                   <div className="mt-2">
                     <p className="text-gray-300 text-xs sm:text-sm">
-                      {expandedDescriptions[item.id] 
-                        ? item.overview 
-                        : truncateDescription(item.overview, 15)}
-                      {item.overview.split(' ').length > 15 && (
+                      {expandedDescriptions[show.id] 
+                        ? show.overview 
+                        : truncateDescription(show.overview, 15)}
+                      {show.overview.split(' ').length > 15 && (
                         <button 
-                          onClick={() => toggleDescription(item.id)}
+                          onClick={() => toggleDescription(show.id)}
                           className="text-yellow-400 ml-1 hover:underline focus:outline-none text-xs"
                         >
-                          {expandedDescriptions[item.id] ? 'Less' : 'More...'}
+                          {expandedDescriptions[show.id] ? 'Less' : 'More...'}
                         </button>
                       )}
                     </p>
                   </div>
                   <div className="flex items-center mt-2 text-xs sm:text-sm">
                     <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span className="text-white">{item.vote_average.toFixed(1)}</span>
-                    <ClockIcon className="h-4 w-4 text-gray-400 ml-4 mr-1" />
-                    <span className="text-white">
-                      {item.release_date || item.first_air_date}
-                    </span>
+                    <span className="text-white">{show.vote_average.toFixed(1)}</span>
+                    <CalendarIcon className="h-4 w-4 text-gray-400 ml-4 mr-1" />
+                    <span className="text-white">{show.first_air_date}</span>
+                  </div>
+                  <div className="flex items-center mt-2 text-xs sm:text-sm">
+                    <FilmIcon className="h-4 w-4 text-gray-400 mr-1" />
+                    <span className="text-white">{show.origin_country.join(', ')}</span>
                   </div>
                 </div>
               </motion.div>
@@ -185,4 +206,4 @@ const Trending = () => {
   )
 }
 
-export default Trending
+export default Tvshows
