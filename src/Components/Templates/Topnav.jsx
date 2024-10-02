@@ -78,9 +78,9 @@ const Topnav = () => {
   };
 
   return (
-    <div className="bg-gray-800 py-4 shadow-md">
+    <div className="bg-gradient-to-r from-purple-800 to-indigo-900 py-2 shadow-md">
       <div className="container mx-auto px-4">
-        <form onSubmit={handleSubmit} className="flex justify-center md:justify-end">
+        <form onSubmit={handleSubmit} className="flex justify-end">
           <div className="relative w-full max-w-md" ref={suggestionRef}>
             <input
               type="text"
