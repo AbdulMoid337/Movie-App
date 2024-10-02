@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import axios from '../../Utils/Axios'
 import { PlayIcon, FilmIcon, TvIcon, CalendarIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
+import Loader from './Loader'
 
-const header = () => {
+const Header = () => {
   const [backgroundImage, setBackgroundImage] = useState('')
   const [title, setTitle] = useState('')
   const [overview, setOverview] = useState('')
   const [releaseDate, setReleaseDate] = useState('')
   const [mediaType, setMediaType] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchTrendingItem = async () => {
+      setIsLoading(true)
       try {
         const response = await axios.get('/trending/all/day')
         const items = response.data.results
@@ -24,6 +27,8 @@ const header = () => {
         setMediaType(randomItem.media_type)
       } catch (error) {
         console.error('Error fetching trending item:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -34,6 +39,10 @@ const header = () => {
     if (text.length <= maxLength) return text;
     return text.substr(0, text.lastIndexOf(' ', maxLength)) + '...';
   };
+
+  if (isLoading) {
+    return <Loader />
+  }
 
   return (
     <div 
@@ -99,4 +108,4 @@ const header = () => {
   )
 }
 
-export default header
+export default Header
