@@ -87,6 +87,10 @@ const Movies = () => {
     navigate('/')
   }
 
+  const handleMovieClick = (movieId) => {
+    navigate(`/movies/details/${movieId}`)
+  }
+
   const truncateDescription = (text, maxWords) => {
     const words = text.split(' ')
     if (words.length > maxWords) {
@@ -141,8 +145,8 @@ const Movies = () => {
     <div className="bg-gray-900 min-h-screen">
       <div className="fixed top-0 left-0 right-0 bg-gray-900 z-10 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center py-3 space-y-3 md:space-y-0">
-            <div className="flex items-center space-x-4 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-center py-3 space-y-3 sm:space-y-0">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={handleBackToHome}
                 className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded flex items-center text-sm"
@@ -151,44 +155,35 @@ const Movies = () => {
                 <span className="hidden sm:inline">Back to Home</span>
                 <span className="sm:hidden">Home</span>
               </button>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Movies</h2>
+              <h2 className="text-2xl font-bold text-white">Movies</h2>
             </div>
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <DropDown
+                value={category}
+                onChange={handleCategoryChange}
+                options={categoryOptions}
+              />
+              {category === 'genre' && (
                 <DropDown
-                  value={category}
-                  onChange={handleCategoryChange}
-                  options={categoryOptions}
-                  label="Category"
-                  className="w-full sm:w-auto"
+                  value={genre}
+                  onChange={handleGenreChange}
+                  options={genreOptions}
                 />
-                {category === 'genre' && (
-                  <DropDown
-                    value={genre}
-                    onChange={handleGenreChange}
-                    options={genreOptions}
-                    label="Genre"
-                    className="w-full sm:w-auto"
-                  />
-                )}
-                <DropDown
-                  value={country}
-                  onChange={handleCountryChange}
-                  options={[{ value: '', label: 'All Countries' }, ...countryOptions]}
-                  label="Country"
-                  scrollable={true}
-                  className="w-full sm:w-auto"
-                />
-              </div>
+              )}
+              <DropDown
+                value={country}
+                onChange={handleCountryChange}
+                options={[{ value: '', label: 'All Countries' }, ...countryOptions]}
+              />
               <Topnav />
             </div>
           </div>
         </div>
       </div>
-      {/* Increase the height of the mobile-only spacer div */}
-      <div className="h-48 md:h-0"></div>
+      {/* Increase the height of the spacer div for more top padding */}
+      <div className="h-52 md:h-36"></div>
       {/* Adjust padding for mobile and larger screens */}
-      <div className="px-4 sm:px-6 lg:px-8 pt-6 md:pt-36">
+      <div className="px-4 sm:px-8 lg:px-8 pt-6 md:pt-2">
         <InfiniteScroll
           dataLength={movies.length}
           next={loadMoreItems}
@@ -200,13 +195,14 @@ const Movies = () => {
             </p>
           }
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
             {movies.map((movie) => (
               <motion.div
                 key={movie.id}
-                className="bg-gray-800 rounded-lg shadow-lg overflow-hidden"
+                className="bg-gray-800 rounded-lg shadow-lg overflow-hidden cursor-pointer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleMovieClick(movie.id)}
               >
                 <img
                   src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}

@@ -1,107 +1,105 @@
 import React, { useState, useEffect } from 'react'
 import axios from '../../Utils/Axios'
-import { PlayIcon, FilmIcon, TvIcon, CalendarIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
+import { Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import * as HeroIcons from '@heroicons/react/24/solid'
 import Loader from './Loader'
 
 const Header = () => {
-  const [backgroundImage, setBackgroundImage] = useState('')
-  const [title, setTitle] = useState('')
-  const [overview, setOverview] = useState('')
-  const [releaseDate, setReleaseDate] = useState('')
-  const [mediaType, setMediaType] = useState('')
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [movie, setMovie] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
 
   useEffect(() => {
-    const fetchTrendingItem = async () => {
-      setIsLoading(true)
+    const fetchRandomTrendingMovie = async () => {
       try {
-        const response = await axios.get('/trending/all/day')
-        const items = response.data.results
-        const randomItem = items[Math.floor(Math.random() * items.length)]
-        const imageUrl = `https://image.tmdb.org/t/p/original${randomItem.backdrop_path}`
-        setBackgroundImage(imageUrl)
-        setTitle(randomItem.title || randomItem.name)
-        setOverview(randomItem.overview)
-        setReleaseDate(randomItem.release_date || randomItem.first_air_date)
-        setMediaType(randomItem.media_type)
+        const response = await axios.get('/trending/all/day');
+        const trendingMovies = response.data.results;
+        const randomIndex = Math.floor(Math.random() * trendingMovies.length);
+        const randomMovie = trendingMovies[randomIndex];
+        setMovie(randomMovie);
+        
+        // Fetch video details
+        const videoResponse = await axios.get(`/${randomMovie.media_type}/${randomMovie.id}/videos`);
+        const trailer = videoResponse.data.results.find(video => video.type === "Trailer");
+        if (trailer) {
+          setTrailerKey(trailer.key);
+        }
       } catch (error) {
-        console.error('Error fetching trending item:', error)
-      } finally {
-        setIsLoading(false)
+        console.error('Error fetching random trending movie:', error);
       }
-    }
+    };
+    fetchRandomTrendingMovie();
+  }, []);
 
-    fetchTrendingItem()
-  }, [])
+  if (!movie) return null;
 
-  const truncateOverview = (text, maxLength) => {
-    if (text.length <= maxLength) return text;
-    return text.substr(0, text.lastIndexOf(' ', maxLength)) + '...';
+  const truncate = (str, n) => {
+    return str?.length > n ? str.substr(0, n - 1) + "..." : str;
   };
 
   return (
-    <div 
-      className="bg-cover bg-center h-[50vh] md:h-[70vh] relative overflow-hidden"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
-      <div className="absolute inset-0 flex flex-col items-start justify-end p-6 md:p-16 text-white">
-        <h1 className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 text-shadow">
-          {title || 'Welcome to Movie App'}
-        </h1>
-        <div className="flex items-center space-x-4 mb-2 md:mb-4">
-          <div className="flex items-center">
-            {mediaType === 'movie' ? (
-              <FilmIcon className="w-5 h-5 mr-2 text-yellow-500" />
-            ) : (
-              <TvIcon className="w-5 h-5 mr-2 text-yellow-500" />
-            )}
-            <span className="text-sm md:text-base text-shadow">
-              {mediaType === 'movie' ? 'Movie' : 'TV Show'}
-            </span>
-          </div>
-          {releaseDate && (
-            <div className="flex items-center">
-              <CalendarIcon className="w-5 h-5 mr-2 text-yellow-500" />
-              <span className="text-sm md:text-base text-shadow">
-                {new Date(releaseDate).toLocaleDateString()}
-              </span>
-            </div>
+    <header className="relative h-screen text-white pt-16"> {/* Add pt-16 for padding top */}
+      <div className="absolute inset-0 pt-16"> {/* Add pt-16 here as well */}
+        <img
+          src={`https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
+          alt={movie.title || movie.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+      </div>
+      <div className="absolute bottom-0 left-0 p-8 w-full md:w-1/2">
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">{movie.title || movie.name}</h1>
+        <p className="text-lg mb-4">{truncate(movie.overview, 150)}</p>
+        <div className="flex space-x-4">
+          <Link
+            to={`/${movie.media_type === 'movie' ? 'movies' : 'tv'}/details/${movie.id}`}
+            className="bg-white text-black px-6 py-2 rounded-full font-bold hover:bg-gray-300 transition duration-300"
+          >
+            More Info
+          </Link>
+          {trailerKey && (
+            <button
+              onClick={() => setShowTrailer(true)}
+              className="bg-gray-500 bg-opacity-50 text-white px-6 py-2 rounded-full font-bold hover:bg-opacity-75 transition duration-300 flex items-center"
+            >
+              <HeroIcons.PlayIcon className="h-5 w-5 mr-2" />
+              Watch Trailer
+            </button>
           )}
         </div>
-        {overview && (
-          <div className="mb-4 md:mb-6">
-            <p className={`text-sm md:text-base max-w-2xl text-shadow ${isExpanded ? '' : 'line-clamp-3'}`}>
-              {isExpanded ? overview : truncateOverview(overview, 200)}
-            </p>
-            {overview.length > 200 && (
-              <button 
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-yellow-500 hover:text-yellow-400 text-sm md:text-base mt-2 flex items-center"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUpIcon className="w-4 h-4 mr-1" />
-                    Show Less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDownIcon className="w-4 h-4 mr-1" />
-                    Show More
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        )}
-        <button className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105">
-          <PlayIcon className="w-5 h-5 mr-2" />
-          Watch Trailer
-        </button>
       </div>
-    </div>
-  )
-}
 
-export default Header
+      <AnimatePresence>
+        {showTrailer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+            onClick={() => setShowTrailer(false)}
+          >
+            <div className="relative w-full h-[56.25vw] max-w-[90vw] max-h-[90vh]">
+              <button
+                onClick={() => setShowTrailer(false)}
+                className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+              >
+                <HeroIcons.XMarkIcon className="h-8 w-8" />
+              </button>
+              <iframe
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title="movie-trailer"
+                className="w-full h-full"
+              ></iframe>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+};
+
+export default Header;

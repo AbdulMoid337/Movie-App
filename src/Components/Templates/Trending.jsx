@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import axios from '../../Utils/Axios'
 import { motion } from 'framer-motion'
-import { StarIcon, ClockIcon, HomeIcon } from '@heroicons/react/24/solid'
+import * as HeroIcons from '@heroicons/react/24/solid'
 import GlobalLoader from './GlobalLoader'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import DropDown from './DropDown'
@@ -97,7 +97,7 @@ const Trending = () => {
                 onClick={handleBackToHome}
                 className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded flex items-center text-sm"
               >
-                <HomeIcon className="h-5 w-5 mr-2" />
+                <HeroIcons.HomeIcon className="h-5 w-5 mr-2" />
                 <span className="hidden sm:inline">Back to Home</span>
                 <span className="sm:hidden">Home</span>
               </button>
@@ -119,7 +119,10 @@ const Trending = () => {
           </div>
         </div>
       </div>
-      <div className="pt-24 sm:pt-28 px-4 sm:px-6 lg:px-8">
+      {/* Add a spacer div to push content below the fixed header */}
+      <div className="h-40 md:h-28"></div>
+      {/* Adjust padding for mobile and larger screens */}
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 md:pt-0">
         <InfiniteScroll
           dataLength={trendingItems.length}
           next={loadMoreItems}
@@ -133,49 +136,57 @@ const Trending = () => {
         >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
             {trendingItems.map((item) => (
-              <motion.div
+              <Link
                 key={item.id}
-                className="bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                to={`/${item.media_type === 'movie' ? 'movies' : 'tv-shows'}/details/${item.id}`}
+                className="block"
               >
-                <img
-                  src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                  alt={item.title || item.name}
-                  className="w-full h-48 sm:h-64 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="text-sm sm:text-base font-semibold text-white truncate">
-                    {item.title || item.name}
-                  </h3>
-                  <p className="text-gray-400 text-xs mt-1">
-                    {item.media_type.charAt(0).toUpperCase() + item.media_type.slice(1)}
-                  </p>
-                  <div className="mt-2">
-                    <p className="text-gray-300 text-xs sm:text-sm">
-                      {expandedDescriptions[item.id] 
-                        ? item.overview 
-                        : truncateDescription(item.overview, 15)}
-                      {item.overview.split(' ').length > 15 && (
-                        <button 
-                          onClick={() => toggleDescription(item.id)}
-                          className="text-yellow-400 ml-1 hover:underline focus:outline-none text-xs"
-                        >
-                          {expandedDescriptions[item.id] ? 'Less' : 'More...'}
-                        </button>
-                      )}
+                <motion.div
+                  className="bg-gray-800 rounded-lg shadow-lg overflow-hidden cursor-pointer"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <img
+                    src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                    alt={item.title || item.name}
+                    className="w-full h-48 sm:h-64 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="text-sm sm:text-base font-semibold text-white truncate">
+                      {item.title || item.name}
+                    </h3>
+                    <p className="text-gray-400 text-xs mt-1">
+                      {item.media_type.charAt(0).toUpperCase() + item.media_type.slice(1)}
                     </p>
+                    <div className="mt-2">
+                      <p className="text-gray-300 text-xs sm:text-sm">
+                        {expandedDescriptions[item.id] 
+                          ? item.overview 
+                          : truncateDescription(item.overview, 15)}
+                        {item.overview.split(' ').length > 15 && (
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleDescription(item.id);
+                            }}
+                            className="text-yellow-400 ml-1 hover:underline focus:outline-none text-xs"
+                          >
+                            {expandedDescriptions[item.id] ? 'Less' : 'More...'}
+                          </button>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center mt-2 text-xs sm:text-sm">
+                      <HeroIcons.StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
+                      <span className="text-white">{item.vote_average.toFixed(1)}</span>
+                      <HeroIcons.ClockIcon className="h-4 w-4 text-gray-400 ml-4 mr-1" />
+                      <span className="text-white">
+                        {item.release_date || item.first_air_date}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center mt-2 text-xs sm:text-sm">
-                    <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span className="text-white">{item.vote_average.toFixed(1)}</span>
-                    <ClockIcon className="h-4 w-4 text-gray-400 ml-4 mr-1" />
-                    <span className="text-white">
-                      {item.release_date || item.first_air_date}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </InfiniteScroll>

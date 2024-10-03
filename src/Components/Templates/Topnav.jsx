@@ -72,9 +72,17 @@ const Topnav = () => {
     setShowSuggestions(false);
   };
 
-  const handleSuggestionClick = () => {
+  const handleSuggestionClick = (suggestion) => {
     setShowSuggestions(false);
     setQuery("");
+    if (suggestion.media_type === "movie") {
+      navigate(`/movies/details/${suggestion.id}`);
+    } else if (suggestion.media_type === "tv") {
+      navigate(`/tv-shows/details/${suggestion.id}`);
+    } else if (suggestion.media_type === "person") {
+      navigate(`/people/details/${suggestion.id}`);
+    }
+    console.log(`Navigating to ${suggestion.media_type}: ${suggestion.id}`);
   };
 
   return (
@@ -110,12 +118,9 @@ const Topnav = () => {
                 ) : suggestions.length > 0 ? (
                   suggestions.map((suggestion) => (
                     <li key={suggestion.id}>
-                      <Link
-                        to={`/search/${encodeURIComponent(
-                          suggestion.title || suggestion.name
-                        )}`}
-                        className="flex items-center px-4 py-2 hover:bg-gray-700 text-white"
-                        onClick={handleSuggestionClick}
+                      <button
+                        className="flex items-center px-4 py-2 hover:bg-gray-700 text-white w-full text-left"
+                        onClick={() => handleSuggestionClick(suggestion)}
                       >
                         <img
                           src={
@@ -146,7 +151,7 @@ const Topnav = () => {
                               ` • ${suggestion.known_for_department}`}
                           </p>
                         </div>
-                      </Link>
+                      </button>
                     </li>
                   ))
                 ) : (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import axios from "../../Utils/Axios";
 import { motion } from "framer-motion";
 import {
@@ -25,13 +26,13 @@ const HorizontalCards = () => {
       try {
         const response = await axios.get(`/trending/${mediaType}/week`);
         setTrendingItems(response.data.results.slice(0, 10));
+        console.log(response.data.results);
       } catch (error) {
         console.error("Error fetching trending items:", error);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchTrendingItems();
   }, [mediaType]);
 
@@ -97,7 +98,8 @@ const HorizontalCards = () => {
     return text;
   };
 
-  const toggleDescription = (id) => {
+  const toggleDescription = (e, id) => {
+    e.preventDefault(); // Prevent navigation when clicking "More/Less"
     setExpandedDescriptions((prev) => ({
       ...prev,
       [id]: !prev[id],
@@ -128,54 +130,58 @@ const HorizontalCards = () => {
         </div>
         <Slider {...settings}>
           {trendingItems.map((item) => (
-            <motion.div
+            <Link
               key={item.id}
-              className="px-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              to={`/${item.media_type === 'movie' ? 'movies' : 'tv-shows'}/details/${item.id}`}
+              className="block px-2"
             >
-              <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-                <img
-                  src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                  alt={item.title || item.name}
-                  className="w-full h-80 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold text-white truncate">
-                    {item.title || item.name}
-                  </h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {item.media_type.charAt(0).toUpperCase() +
-                      item.media_type.slice(1)}
-                  </p>
-                  <div className="mt-2">
-                    <p className="text-gray-300 text-sm">
-                      {expandedDescriptions[item.id]
-                        ? item.overview
-                        : truncateDescription(item.overview, 20)}
-                      {item.overview.split(" ").length > 20 && (
-                        <button
-                          onClick={() => toggleDescription(item.id)}
-                          className="text-yellow-400 ml-1 hover:underline focus:outline-none"
-                        >
-                          {expandedDescriptions[item.id] ? "Less" : "More..."}
-                        </button>
-                      )}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                  <img
+                    src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                    alt={item.title || item.name}
+                    className="w-full h-80 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="text-xl font-semibold text-white truncate">
+                      {item.title || item.name}
+                    </h3>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {item.media_type.charAt(0).toUpperCase() +
+                        item.media_type.slice(1)}
                     </p>
-                  </div>
-                  <div className="flex items-center mt-2">
-                    <StarIcon className="h-5 w-5 text-yellow-400 mr-1" />
-                    <span className="text-white">
-                      {item.vote_average.toFixed(1)}
-                    </span>
-                    <ClockIcon className="h-5 w-5 text-gray-400 ml-4 mr-1" />
-                    <span className="text-white">
-                      {item.release_date || item.first_air_date}
-                    </span>
+                    <div className="mt-2">
+                      <p className="text-gray-300 text-sm">
+                        {expandedDescriptions[item.id]
+                          ? item.overview
+                          : truncateDescription(item.overview, 20)}
+                        {item.overview.split(" ").length > 20 && (
+                          <button
+                            onClick={(e) => toggleDescription(e, item.id)}
+                            className="text-yellow-400 ml-1 hover:underline focus:outline-none"
+                          >
+                            {expandedDescriptions[item.id] ? "Less" : "More..."}
+                          </button>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center mt-2">
+                      <StarIcon className="h-5 w-5 text-yellow-400 mr-1" />
+                      <span className="text-white">
+                        {item.vote_average.toFixed(1)}
+                      </span>
+                      <ClockIcon className="h-5 w-5 text-gray-400 ml-4 mr-1" />
+                      <span className="text-white">
+                        {item.release_date || item.first_air_date}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           ))}
         </Slider>
       </div>
