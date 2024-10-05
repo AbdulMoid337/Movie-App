@@ -34,7 +34,7 @@ const Contact = () => {
   return (
     <div className="bg-gray-900 min-h-screen text-white pt-20">
       <div className="container mx-auto px-4">
-        <motion.h1 
+        <motion.h1
           className="text-4xl md:text-5xl font-bold text-center mb-8"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -42,28 +42,29 @@ const Contact = () => {
         >
           Contact Us
         </motion.h1>
-        
-        <motion.p 
+
+        <motion.p
           className="text-lg text-center mb-12 max-w-3xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          Have a question or feedback? We'd love to hear from you. 
+          Have a question or feedback? We'd love to hear from you.
           Get in touch with our team using the form below or through our contact information.
         </motion.p>
 
         <div className="flex flex-col md:flex-row gap-8 mb-16">
-          <motion.div 
+          <motion.div
             className="md:w-1/2"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             <h2 className="text-2xl font-bold mb-4">Send us a message</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form  action='https://formspree.io/f/xzzbprwk' method="POST"
+              className="space-y-4">
               <div>
-                <label htmlFor="name" className="block mb-1">Name</label>
+                <label htmlFor="name" className="block mb-1">Name
                 <input
                   type="text"
                   id="name"
@@ -72,10 +73,10 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-3 py-2 bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
+                /></label>
               </div>
               <div>
-                <label htmlFor="email" className="block mb-1">Email</label>
+                <label htmlFor="email" className="block mb-1">Email
                 <input
                   type="email"
                   id="email"
@@ -84,10 +85,10 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-3 py-2 bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
+                /></label>
               </div>
               <div>
-                <label htmlFor="message" className="block mb-1">Message</label>
+                <label htmlFor="message" className="block mb-1">Message
                 <textarea
                   id="message"
                   name="message"
@@ -96,7 +97,7 @@ const Contact = () => {
                   required
                   rows="4"
                   className="w-full px-3 py-2 bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                ></textarea>
+                ></textarea></label>
               </div>
               <button
                 type="submit"
@@ -107,7 +108,7 @@ const Contact = () => {
             </form>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="md:w-1/2"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
